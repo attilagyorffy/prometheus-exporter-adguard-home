@@ -216,7 +216,7 @@
         "targets": [
           {
             "refId": "A",
-            "expr": "adguard_blocked_filtering{job=\"adguard\"} / adguard_dns_queries{job=\"adguard\"}",
+            "expr": "(adguard_blocked_filtering{job=\"adguard\"} + adguard_replaced_safebrowsing{job=\"adguard\"} + adguard_replaced_safesearch{job=\"adguard\"} + adguard_replaced_parental{job=\"adguard\"}) / adguard_dns_queries{job=\"adguard\"}",
             "instant": true
           }
         ],
@@ -248,33 +248,62 @@
       {
         "id": 7,
         "type": "timeseries",
-        "title": "DNS Query Totals",
-        "description": "24-hour rolling window totals for DNS queries. Shows total queries alongside blocked and replaced counts over time.",
-        "gridPos": { "x": 0, "y": 5, "w": 16, "h": 8 },
+        "title": "DNS Queries",
+        "description": "Total DNS queries in the 24-hour rolling window over time.",
+        "gridPos": { "x": 0, "y": 5, "w": 8, "h": 8 },
         "datasource": { "type": "prometheus", "uid": "${datasource}" },
         "targets": [
           {
             "refId": "A",
             "expr": "adguard_dns_queries{job=\"adguard\"}",
             "legendFormat": "Total Queries"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "short",
+            "color": { "mode": "palette-classic" },
+            "custom": {
+              "drawStyle": "line",
+              "lineWidth": 1,
+              "fillOpacity": 10,
+              "pointSize": 5,
+              "showPoints": "never",
+              "spanNulls": true
+            }
           },
+          "overrides": []
+        },
+        "options": {
+          "tooltip": { "mode": "multi", "sort": "desc" },
+          "legend": { "displayMode": "list", "placement": "bottom" }
+        }
+      },
+      {
+        "id": 23,
+        "type": "timeseries",
+        "title": "Blocked & Replaced",
+        "description": "Queries blocked by filtering, safe browsing, safe search, and parental controls in the 24-hour rolling window.",
+        "gridPos": { "x": 8, "y": 5, "w": 8, "h": 8 },
+        "datasource": { "type": "prometheus", "uid": "${datasource}" },
+        "targets": [
           {
-            "refId": "B",
+            "refId": "A",
             "expr": "adguard_blocked_filtering{job=\"adguard\"}",
             "legendFormat": "Blocked"
           },
           {
-            "refId": "C",
+            "refId": "B",
             "expr": "adguard_replaced_safebrowsing{job=\"adguard\"}",
             "legendFormat": "Safe Browsing"
           },
           {
-            "refId": "D",
+            "refId": "C",
             "expr": "adguard_replaced_safesearch{job=\"adguard\"}",
             "legendFormat": "Safe Search"
           },
           {
-            "refId": "E",
+            "refId": "D",
             "expr": "adguard_replaced_parental{job=\"adguard\"}",
             "legendFormat": "Parental"
           }
@@ -282,6 +311,7 @@
         "fieldConfig": {
           "defaults": {
             "unit": "short",
+            "color": { "mode": "palette-classic" },
             "custom": {
               "drawStyle": "line",
               "lineWidth": 1,
