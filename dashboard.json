@@ -649,8 +649,8 @@
         "type": "row",
         "title": "Filtering & Configuration",
         "gridPos": { "x": 0, "y": 45, "w": 24, "h": 1 },
-        "collapsed": false
-      },
+        "collapsed": true,
+        "panels": [
       {
         "id": 14,
         "type": "table",
@@ -1111,6 +1111,8 @@
           "colorMode": "background",
           "textMode": "value"
         }
+      }
+        ]
       }
     ]
   },
