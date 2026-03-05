@@ -1,4 +1,4 @@
-# prometheus-exporter-adguard-home
+# AdGuard Home Exporter
 
 Prometheus exporter for [AdGuard Home](https://adguard.com/en/adguard-home/overview.html), built following [official Prometheus exporter guidelines](https://prometheus.io/docs/instrumenting/writing_exporters/).
 
