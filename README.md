@@ -120,3 +120,7 @@ Built and pushed to `ghcr.io/attilagyorffy/prometheus-exporter-adguard-home` via
 ## Further reading
 
 - [Comparison with existing exporters](docs/comparison.md) — why this exporter was built instead of using henrywhitaker3 or ebrianne
+
+## License
+
+MIT — see [LICENSE](LICENSE).
