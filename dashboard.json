@@ -667,12 +667,18 @@
           },
           {
             "refId": "B",
-            "expr": "adguard_filtering_list_last_updated_timestamp_seconds{job=\"adguard\"}",
+            "expr": "adguard_filtering_list_last_updated_timestamp_seconds{job=\"adguard\"} * 1000",
             "instant": true,
             "format": "table"
           }
         ],
         "transformations": [
+          {
+            "id": "filterFieldsByName",
+            "options": {
+              "include": { "pattern": "^(name|enabled|Value.*)$" }
+            }
+          },
           {
             "id": "merge",
             "options": {}
@@ -680,12 +686,6 @@
           {
             "id": "organize",
             "options": {
-              "excludeByName": {
-                "Time": true, "Time 1": true, "Time 2": true,
-                "__name__": true, "__name__ 1": true, "__name__ 2": true,
-                "instance": true, "instance 1": true, "instance 2": true,
-                "job": true, "job 1": true, "job 2": true
-              },
               "renameByName": {
                 "name": "List",
                 "enabled": "Enabled",
