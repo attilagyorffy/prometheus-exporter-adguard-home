@@ -4,8 +4,8 @@ build:
 	go build -o adguard-home-exporter .
 
 run:
-	ADGUARD_USERNAME=$$(op read "op://Private/kpk2enexqzl5ya2rrxkyfebehu/username") \
-	ADGUARD_PASSWORD=$$(op read "op://Private/kpk2enexqzl5ya2rrxkyfebehu/password") \
+	ADGUARD_USERNAME=$$(op read "op://Private/AdGuard Home/username") \
+	ADGUARD_PASSWORD=$$(op read "op://Private/AdGuard Home/password") \
 	go run .
 
 query:

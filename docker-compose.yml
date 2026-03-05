@@ -3,8 +3,8 @@ services:
     image: ghcr.io/attilagyorffy/prometheus-exporter-adguard-home:latest
     container_name: adguard-home-exporter
     environment:
-      - ADGUARD_URL=https://adguard.gyorffy.network
-      - ADGUARD_USERNAME=attila
+      - ADGUARD_URL=http://adguard:3000
+      - ADGUARD_USERNAME=admin
       - ADGUARD_PASSWORD=${ADGUARD_PASSWORD}
       - LISTEN_PORT=9617
       - ADGUARD_TOP_N=10

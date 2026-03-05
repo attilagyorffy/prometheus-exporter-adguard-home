@@ -14,7 +14,7 @@ import (
 
 func main() {
 	port := envOrDefault("LISTEN_PORT", "9617")
-	adguardURL := envOrDefault("ADGUARD_URL", "https://adguard.gyorffy.network")
+	adguardURL := envOrDefault("ADGUARD_URL", "http://localhost:3000")
 	adguardUsername := os.Getenv("ADGUARD_USERNAME")
 	adguardPassword := os.Getenv("ADGUARD_PASSWORD")
 	topN := envOrDefaultInt("ADGUARD_TOP_N", 10)
