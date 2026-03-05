@@ -108,9 +108,11 @@ func collectTopClients(entries []map[string]float64, clientMap map[string]string
 			break
 		}
 		for ip, value := range entry {
-			name := ""
+			name := ip
 			if clientMap != nil {
-				name = clientMap[ip]
+				if n, ok := clientMap[ip]; ok {
+					name = n
+				}
 			}
 			ch <- prometheus.MustNewConstMetric(topClientsDesc, prometheus.GaugeValue, value, ip, name)
 		}

@@ -32,7 +32,7 @@ func newTestServer() *httptest.Server {
 				AvgProcessingTime:       0.025,
 				TopQueriedDomains:       []map[string]float64{{"example.com": 500}},
 				TopBlockedDomains:       []map[string]float64{{"ads.example.com": 300}},
-				TopClients:              []map[string]float64{{"10.0.0.3": 50000}},
+				TopClients:              []map[string]float64{{"10.0.0.3": 50000}, {"10.0.0.100": 1200}},
 				TopUpstreamsResponses:   []map[string]float64{{"127.0.0.1:5300": 90000}},
 				TopUpstreamsAvgTime:     []map[string]float64{{"127.0.0.1:5300": 0.05}},
 			})
@@ -150,6 +150,7 @@ func TestCollectorTopClients(t *testing.T) {
 	expected := `
 		# HELP adguard_top_clients Query count for a top client in the stats window (from /control/stats top_clients). The name label is resolved from persistent clients.
 		# TYPE adguard_top_clients gauge
+		adguard_top_clients{client="10.0.0.100",name="10.0.0.100"} 1200
 		adguard_top_clients{client="10.0.0.3",name="TrueNAS"} 50000
 	`
 	if err := testutil.CollectAndCompare(c, strings.NewReader(expected), "adguard_top_clients"); err != nil {
