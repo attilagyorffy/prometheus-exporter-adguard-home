@@ -117,6 +117,21 @@ make test   # Runs all tests
 
 Built and pushed to `ghcr.io/attilagyorffy/prometheus-exporter-adguard-home` via GitHub Actions on every push to `main`.
 
+## Grafana dashboard
+
+A ready-to-import dashboard is included at [`dashboard.json`](dashboard.json). Import it via the Grafana UI or API (`POST /api/dashboards/db`).
+
+Built from scratch following [Grafana's dashboard best practices](https://grafana.com/docs/grafana/latest/visualizations/dashboards/build-dashboards/best-practices/):
+
+- **General → specific layout** — overview stat panels at the top (status, version, query count, block rate), then drill-down tables and timeseries, with filtering and configuration collapsed at the bottom.
+- **Human-readable client names** — the Top Clients table and Client Queries timeseries show persistent client names resolved by the exporter (e.g. `name="Attila's MacBook"`) instead of raw IPs.
+- **`$client` template variable** — filters the Client Queries timeseries by client name (`name=~"$client"`), so you can isolate individual devices without creating separate dashboards.
+- **`$datasource` template variable** — all panels use `"uid": "${datasource}"` instead of hardcoded datasource UIDs, making the dashboard portable across Grafana instances.
+- **Panel descriptions on every panel** — hover the `(i)` icon on any panel to see what the metric means (e.g. _"Percentage of DNS queries blocked by filtering, safe browsing, safe search, or parental controls"_).
+- **Correct units throughout** — `unit: "s"` for processing time, `unit: "decbytes"` for cache size, `unit: "percentunit"` for block rate. Grafana auto-formats values without manual overrides.
+- **Semantic colour mapping** — green/red value mappings on all on/off stat panels (`"1": "Up"/"Enabled"/"On"`, `"0": "Down"/"Disabled"/"Off"`), `palette-classic` for multi-series timeseries.
+- **Refresh matches scrape interval** — `"refresh": "1m"` matches the Prometheus 1-minute scrape interval. Faster refresh would just re-query identical data.
+
 ## Further reading
 
 - [Comparison with existing exporters](docs/comparison.md) — why this exporter was built instead of using henrywhitaker3 or ebrianne
