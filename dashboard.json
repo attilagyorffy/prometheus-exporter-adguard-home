@@ -20,6 +20,20 @@
           "query": "prometheus",
           "current": {},
           "hide": 0
+        },
+        {
+          "name": "client",
+          "type": "query",
+          "datasource": { "type": "prometheus", "uid": "${datasource}" },
+          "definition": "label_values(adguard_top_clients{job=\"adguard\"}, name)",
+          "query": "label_values(adguard_top_clients{job=\"adguard\"}, name)",
+          "includeAll": true,
+          "allValue": ".*",
+          "multi": true,
+          "current": { "selected": true, "text": "All", "value": "$__all" },
+          "sort": 1,
+          "refresh": 2,
+          "hide": 0
         }
       ]
     },
@@ -492,10 +506,44 @@
         }
       },
       {
+        "id": 24,
+        "type": "timeseries",
+        "title": "Client Queries",
+        "description": "DNS query count per client over time. Use the $client variable to filter specific clients.",
+        "gridPos": { "x": 0, "y": 22, "w": 24, "h": 8 },
+        "datasource": { "type": "prometheus", "uid": "${datasource}" },
+        "targets": [
+          {
+            "refId": "A",
+            "expr": "adguard_top_clients{job=\"adguard\", name=~\"$client\"}",
+            "legendFormat": "{{name}}"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "short",
+            "color": { "mode": "palette-classic" },
+            "custom": {
+              "drawStyle": "line",
+              "lineWidth": 1,
+              "fillOpacity": 10,
+              "pointSize": 5,
+              "showPoints": "never",
+              "spanNulls": true
+            }
+          },
+          "overrides": []
+        },
+        "options": {
+          "tooltip": { "mode": "multi", "sort": "desc" },
+          "legend": { "displayMode": "list", "placement": "bottom" }
+        }
+      },
+      {
         "id": 400,
         "type": "row",
         "title": "Upstreams",
-        "gridPos": { "x": 0, "y": 22, "w": 24, "h": 1 },
+        "gridPos": { "x": 0, "y": 30, "w": 24, "h": 1 },
         "collapsed": false
       },
       {
@@ -503,7 +551,7 @@
         "type": "bargauge",
         "title": "Upstream Responses",
         "description": "Number of responses per upstream DNS server in the 24h rolling window.",
-        "gridPos": { "x": 0, "y": 23, "w": 12, "h": 6 },
+        "gridPos": { "x": 0, "y": 31, "w": 12, "h": 6 },
         "datasource": { "type": "prometheus", "uid": "${datasource}" },
         "targets": [
           {
@@ -534,8 +582,8 @@
         "id": 13,
         "type": "bargauge",
         "title": "Upstream Avg Response Time",
-        "description": "Average response time per upstream DNS server.",
-        "gridPos": { "x": 12, "y": 23, "w": 12, "h": 6 },
+        "description": "Average response time per upstream DNS server (point-in-time snapshot).",
+        "gridPos": { "x": 12, "y": 31, "w": 12, "h": 6 },
         "datasource": { "type": "prometheus", "uid": "${datasource}" },
         "targets": [
           {
@@ -563,18 +611,52 @@
         }
       },
       {
+        "id": 25,
+        "type": "timeseries",
+        "title": "Upstream Response Time",
+        "description": "Average response time per upstream DNS server over time. Shows whether upstream latency is stable or degrading.",
+        "gridPos": { "x": 0, "y": 37, "w": 24, "h": 8 },
+        "datasource": { "type": "prometheus", "uid": "${datasource}" },
+        "targets": [
+          {
+            "refId": "A",
+            "expr": "adguard_top_upstreams_avg_time_seconds{job=\"adguard\"}",
+            "legendFormat": "{{upstream}}"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "s",
+            "color": { "mode": "palette-classic" },
+            "custom": {
+              "drawStyle": "line",
+              "lineWidth": 1,
+              "fillOpacity": 10,
+              "pointSize": 5,
+              "showPoints": "never",
+              "spanNulls": true
+            }
+          },
+          "overrides": []
+        },
+        "options": {
+          "tooltip": { "mode": "multi", "sort": "desc" },
+          "legend": { "displayMode": "list", "placement": "bottom" }
+        }
+      },
+      {
         "id": 500,
         "type": "row",
         "title": "Filtering & Configuration",
-        "gridPos": { "x": 0, "y": 29, "w": 24, "h": 1 },
+        "gridPos": { "x": 0, "y": 45, "w": 24, "h": 1 },
         "collapsed": false
       },
       {
         "id": 14,
         "type": "table",
         "title": "Filter Lists",
-        "description": "Configured filter lists with rule counts. Shows which lists are enabled and how many rules each contributes.",
-        "gridPos": { "x": 0, "y": 30, "w": 12, "h": 8 },
+        "description": "Configured filter lists with rule counts and last update time.",
+        "gridPos": { "x": 0, "y": 46, "w": 12, "h": 12 },
         "datasource": { "type": "prometheus", "uid": "${datasource}" },
         "targets": [
           {
@@ -582,15 +664,35 @@
             "expr": "adguard_filtering_list_rules{job=\"adguard\"}",
             "instant": true,
             "format": "table"
+          },
+          {
+            "refId": "B",
+            "expr": "adguard_filtering_list_last_updated_timestamp_seconds{job=\"adguard\"}",
+            "instant": true,
+            "format": "table"
           }
         ],
         "transformations": [
           {
+            "id": "merge",
+            "options": {}
+          },
+          {
             "id": "organize",
             "options": {
-              "excludeByName": { "Time": true, "__name__": true, "instance": true, "job": true },
-              "renameByName": { "name": "List", "enabled": "Enabled", "Value": "Rules" },
-              "indexByName": { "name": 0, "enabled": 1, "Value": 2 }
+              "excludeByName": {
+                "Time": true, "Time 1": true, "Time 2": true,
+                "__name__": true, "__name__ 1": true, "__name__ 2": true,
+                "instance": true, "instance 1": true, "instance 2": true,
+                "job": true, "job 1": true, "job 2": true
+              },
+              "renameByName": {
+                "name": "List",
+                "enabled": "Enabled",
+                "Value #A": "Rules",
+                "Value #B": "Last Updated"
+              },
+              "indexByName": { "name": 0, "enabled": 1, "Value #A": 2, "Value #B": 3 }
             }
           },
           {
@@ -621,6 +723,13 @@
                   ]
                 }
               ]
+            },
+            {
+              "matcher": { "id": "byName", "options": "Last Updated" },
+              "properties": [
+                { "id": "unit", "value": "dateTimeAsIso" },
+                { "id": "decimals", "value": 0 }
+              ]
             }
           ]
         }
@@ -630,7 +739,7 @@
         "type": "stat",
         "title": "Filter Rules",
         "description": "Total number of filter rules across all enabled lists.",
-        "gridPos": { "x": 12, "y": 30, "w": 3, "h": 4 },
+        "gridPos": { "x": 12, "y": 46, "w": 3, "h": 4 },
         "datasource": { "type": "prometheus", "uid": "${datasource}" },
         "targets": [
           {
@@ -658,7 +767,7 @@
         "type": "stat",
         "title": "Lists Enabled",
         "description": "Number of enabled filter lists out of total configured lists.",
-        "gridPos": { "x": 15, "y": 30, "w": 3, "h": 4 },
+        "gridPos": { "x": 15, "y": 46, "w": 3, "h": 4 },
         "datasource": { "type": "prometheus", "uid": "${datasource}" },
         "targets": [
           {
@@ -686,7 +795,7 @@
         "type": "stat",
         "title": "User Rules",
         "description": "Number of user-defined filtering rules.",
-        "gridPos": { "x": 18, "y": 30, "w": 3, "h": 4 },
+        "gridPos": { "x": 18, "y": 46, "w": 3, "h": 4 },
         "datasource": { "type": "prometheus", "uid": "${datasource}" },
         "targets": [
           {
@@ -714,7 +823,7 @@
         "type": "stat",
         "title": "Update Interval",
         "description": "How often filter lists are automatically updated.",
-        "gridPos": { "x": 21, "y": 30, "w": 3, "h": 4 },
+        "gridPos": { "x": 21, "y": 46, "w": 3, "h": 4 },
         "datasource": { "type": "prometheus", "uid": "${datasource}" },
         "targets": [
           {
@@ -738,11 +847,46 @@
         }
       },
       {
+        "id": 26,
+        "type": "stat",
+        "title": "Filtering",
+        "description": "Whether DNS filtering is enabled globally.",
+        "gridPos": { "x": 12, "y": 50, "w": 3, "h": 4 },
+        "datasource": { "type": "prometheus", "uid": "${datasource}" },
+        "targets": [
+          {
+            "refId": "A",
+            "expr": "adguard_filtering_enabled{job=\"adguard\"}",
+            "instant": true
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "mappings": [
+              {
+                "type": "value",
+                "options": {
+                  "0": { "text": "Off", "color": "red", "index": 0 },
+                  "1": { "text": "On", "color": "green", "index": 1 }
+                }
+              }
+            ],
+            "thresholds": { "mode": "absolute", "steps": [{ "value": null, "color": "red" }, { "value": 1, "color": "green" }] }
+          },
+          "overrides": []
+        },
+        "options": {
+          "reduceOptions": { "calcs": ["lastNotNull"] },
+          "colorMode": "background",
+          "textMode": "value"
+        }
+      },
+      {
         "id": 19,
         "type": "stat",
         "title": "Safe Browsing",
         "description": "Whether safe browsing protection is enabled.",
-        "gridPos": { "x": 12, "y": 34, "w": 3, "h": 4 },
+        "gridPos": { "x": 15, "y": 50, "w": 3, "h": 4 },
         "datasource": { "type": "prometheus", "uid": "${datasource}" },
         "targets": [
           {
@@ -777,7 +921,7 @@
         "type": "stat",
         "title": "Safe Search",
         "description": "Whether safe search enforcement is enabled.",
-        "gridPos": { "x": 15, "y": 34, "w": 3, "h": 4 },
+        "gridPos": { "x": 18, "y": 50, "w": 3, "h": 4 },
         "datasource": { "type": "prometheus", "uid": "${datasource}" },
         "targets": [
           {
@@ -812,7 +956,7 @@
         "type": "stat",
         "title": "Parental",
         "description": "Whether parental control filtering is enabled.",
-        "gridPos": { "x": 18, "y": 34, "w": 3, "h": 4 },
+        "gridPos": { "x": 21, "y": 50, "w": 3, "h": 4 },
         "datasource": { "type": "prometheus", "uid": "${datasource}" },
         "targets": [
           {
@@ -847,7 +991,7 @@
         "type": "stat",
         "title": "DNSSEC",
         "description": "Whether DNSSEC validation is enabled.",
-        "gridPos": { "x": 21, "y": 34, "w": 3, "h": 4 },
+        "gridPos": { "x": 12, "y": 54, "w": 3, "h": 4 },
         "datasource": { "type": "prometheus", "uid": "${datasource}" },
         "targets": [
           {
@@ -868,6 +1012,97 @@
               }
             ],
             "thresholds": { "mode": "absolute", "steps": [{ "value": null, "color": "red" }, { "value": 1, "color": "green" }] }
+          },
+          "overrides": []
+        },
+        "options": {
+          "reduceOptions": { "calcs": ["lastNotNull"] },
+          "colorMode": "background",
+          "textMode": "value"
+        }
+      },
+      {
+        "id": 27,
+        "type": "stat",
+        "title": "DNS Cache",
+        "description": "Whether DNS query caching is enabled.",
+        "gridPos": { "x": 15, "y": 54, "w": 3, "h": 4 },
+        "datasource": { "type": "prometheus", "uid": "${datasource}" },
+        "targets": [
+          {
+            "refId": "A",
+            "expr": "adguard_dns_cache_enabled{job=\"adguard\"}",
+            "instant": true
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "mappings": [
+              {
+                "type": "value",
+                "options": {
+                  "0": { "text": "Off", "color": "red", "index": 0 },
+                  "1": { "text": "On", "color": "green", "index": 1 }
+                }
+              }
+            ],
+            "thresholds": { "mode": "absolute", "steps": [{ "value": null, "color": "red" }, { "value": 1, "color": "green" }] }
+          },
+          "overrides": []
+        },
+        "options": {
+          "reduceOptions": { "calcs": ["lastNotNull"] },
+          "colorMode": "background",
+          "textMode": "value"
+        }
+      },
+      {
+        "id": 28,
+        "type": "stat",
+        "title": "Cache Size",
+        "description": "Configured DNS cache size.",
+        "gridPos": { "x": 18, "y": 54, "w": 3, "h": 4 },
+        "datasource": { "type": "prometheus", "uid": "${datasource}" },
+        "targets": [
+          {
+            "refId": "A",
+            "expr": "adguard_dns_cache_size_bytes{job=\"adguard\"}",
+            "instant": true
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "decbytes",
+            "color": { "mode": "fixed", "fixedColor": "blue" },
+            "thresholds": { "mode": "absolute", "steps": [{ "value": null, "color": "blue" }] }
+          },
+          "overrides": []
+        },
+        "options": {
+          "reduceOptions": { "calcs": ["lastNotNull"] },
+          "colorMode": "background",
+          "textMode": "value"
+        }
+      },
+      {
+        "id": 29,
+        "type": "stat",
+        "title": "Ratelimit",
+        "description": "DNS query rate limit (queries per second). 0 means disabled.",
+        "gridPos": { "x": 21, "y": 54, "w": 3, "h": 4 },
+        "datasource": { "type": "prometheus", "uid": "${datasource}" },
+        "targets": [
+          {
+            "refId": "A",
+            "expr": "adguard_dns_ratelimit{job=\"adguard\"}",
+            "instant": true
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "short",
+            "color": { "mode": "fixed", "fixedColor": "blue" },
+            "thresholds": { "mode": "absolute", "steps": [{ "value": null, "color": "blue" }] }
           },
           "overrides": []
         },
