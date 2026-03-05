@@ -1,0 +1,14 @@
+services:
+  adguard-home-exporter:
+    image: ghcr.io/attilagyorffy/prometheus-exporter-adguard-home:latest
+    container_name: adguard-home-exporter
+    environment:
+      - ADGUARD_URL=https://adguard.gyorffy.network
+      - ADGUARD_USERNAME=attila
+      - ADGUARD_PASSWORD=${ADGUARD_PASSWORD}
+      - LISTEN_PORT=9617
+      - ADGUARD_TOP_N=10
+      - LOG_LEVEL=info
+    ports:
+      - "9617:9617"
+    restart: unless-stopped
