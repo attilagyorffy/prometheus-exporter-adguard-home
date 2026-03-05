@@ -24,14 +24,18 @@ Prometheus exporter for [AdGuard Home](https://adguard.com/en/adguard-home/overv
 
 ## Metrics
 
-### Scrape meta
+<details>
+<summary><strong>Scrape meta</strong> (2 metrics)</summary>
 
 | Metric | Type | Description |
 |--------|------|-------------|
 | `adguard_up` | gauge | Whether the last scrape succeeded (1 = up, 0 = down) |
 | `adguard_scrape_duration_seconds` | gauge | Duration of the last scrape |
 
-### Instance info (`/control/status`)
+</details>
+
+<details>
+<summary><strong>Instance info</strong> — <code>/control/status</code> (3 metrics)</summary>
 
 | Metric | Type | Labels | Description |
 |--------|------|--------|-------------|
@@ -39,7 +43,10 @@ Prometheus exporter for [AdGuard Home](https://adguard.com/en/adguard-home/overv
 | `adguard_running` | gauge | — | Whether AdGuard Home is running |
 | `adguard_protection_enabled` | gauge | — | Whether DNS protection is enabled |
 
-### Query statistics (`/control/stats`)
+</details>
+
+<details>
+<summary><strong>Query statistics</strong> — <code>/control/stats</code> (11 metrics)</summary>
 
 | Metric | Type | Labels | Description |
 |--------|------|--------|-------------|
@@ -55,7 +62,10 @@ Prometheus exporter for [AdGuard Home](https://adguard.com/en/adguard-home/overv
 | `adguard_top_upstreams_responses` | gauge | `upstream` | Top upstreams by response count |
 | `adguard_top_upstreams_avg_time_seconds` | gauge | `upstream` | Top upstreams by average response time |
 
-### DNS config (`/control/dns_info`)
+</details>
+
+<details>
+<summary><strong>DNS config</strong> — <code>/control/dns_info</code> (6 metrics)</summary>
 
 | Metric | Type | Labels | Description |
 |--------|------|--------|-------------|
@@ -66,7 +76,10 @@ Prometheus exporter for [AdGuard Home](https://adguard.com/en/adguard-home/overv
 | `adguard_dns_cache_optimistic` | gauge | — | Whether optimistic caching is enabled |
 | `adguard_dnssec_enabled` | gauge | — | Whether DNSSEC is enabled |
 
-### Filtering (`/control/filtering/status`)
+</details>
+
+<details>
+<summary><strong>Filtering</strong> — <code>/control/filtering/status</code> (8 metrics)</summary>
 
 | Metric | Type | Labels | Description |
 |--------|------|--------|-------------|
@@ -79,13 +92,18 @@ Prometheus exporter for [AdGuard Home](https://adguard.com/en/adguard-home/overv
 | `adguard_filtering_list_rules` | gauge | `name`, `enabled` | Rules per filter list |
 | `adguard_filtering_list_last_updated_timestamp_seconds` | gauge | `name` | Last update time per filter list |
 
-### Protection (3 endpoints)
+</details>
+
+<details>
+<summary><strong>Protection</strong> — 3 endpoints (3 metrics)</summary>
 
 | Metric | Type | Description |
 |--------|------|-------------|
 | `adguard_safebrowsing_enabled` | gauge | Whether safe browsing is enabled |
 | `adguard_safesearch_enabled` | gauge | Whether safe search is enabled |
 | `adguard_parental_enabled` | gauge | Whether parental control is enabled |
+
+</details>
 
 ## Running locally
 
