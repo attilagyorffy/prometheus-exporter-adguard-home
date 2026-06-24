@@ -49,7 +49,7 @@
         "id": 1,
         "type": "stat",
         "title": "Status",
-        "description": "Whether the exporter can reach AdGuard Home. Based on adguard_up meta-metric.",
+        "description": "Whether the exporter can reach AdGuard Home (`adguard_up`). **Down (red)** means DNS resolution for the whole network is likely broken — clients fall back to their secondary DNS or fail. Check the AdGuard container is running and the exporter's API URL/credentials are correct, then confirm the box answers on port 53. Stays red until the scrape succeeds again.",
         "gridPos": { "x": 0, "y": 1, "w": 4, "h": 3 },
         "datasource": { "type": "prometheus", "uid": "${datasource}" },
         "targets": [
@@ -61,6 +61,7 @@
         ],
         "fieldConfig": {
           "defaults": {
+            "unit": "short",
             "mappings": [
               {
                 "type": "value",
@@ -90,7 +91,7 @@
         "id": 2,
         "type": "stat",
         "title": "Protection",
-        "description": "Whether DNS filtering protection is enabled in AdGuard Home.",
+        "description": "Master protection switch in AdGuard Home (`adguard_protection_enabled`). **Disabled (red)** means nothing is being filtered — all ads/trackers/malware domains resolve normally. If unexpected, re-enable it in the AdGuard UI (Settings → General → Protection) or check whether someone hit the 30-min pause. Normal state is green.",
         "gridPos": { "x": 4, "y": 1, "w": 4, "h": 3 },
         "datasource": { "type": "prometheus", "uid": "${datasource}" },
         "targets": [
@@ -102,6 +103,7 @@
         ],
         "fieldConfig": {
           "defaults": {
+            "unit": "short",
             "mappings": [
               {
                 "type": "value",
@@ -131,7 +133,7 @@
         "id": 3,
         "type": "stat",
         "title": "Version",
-        "description": "AdGuard Home version reported by the instance.",
+        "description": "AdGuard Home version currently running (`adguard_build_info`). Informational — no action needed. If it lags well behind upstream, update via the AdGuard UI (Settings → check for updates) or your container image tag to pick up filtering and security fixes.",
         "gridPos": { "x": 8, "y": 1, "w": 4, "h": 3 },
         "datasource": { "type": "prometheus", "uid": "${datasource}" },
         "targets": [
@@ -144,6 +146,7 @@
         ],
         "fieldConfig": {
           "defaults": {
+            "unit": "short",
             "color": { "mode": "fixed", "fixedColor": "blue" },
             "thresholds": {
               "mode": "absolute",
@@ -162,7 +165,7 @@
         "id": 4,
         "type": "stat",
         "title": "Avg Processing Time",
-        "description": "Average DNS query processing time across all queries in the 24h rolling window.",
+        "description": "Mean time AdGuard takes to answer a query over the 24h window. Healthy is single-digit milliseconds (cache hits) up to tens of ms (upstream lookups). If it climbs into hundreds of ms, browsing feels slow: check the **Upstream Response Time** panel for a slow/failing resolver and confirm DNS caching is On. [DNS filtering syntax & settings](https://adguard-dns.io/kb/general/dns-filtering-syntax/)",
         "gridPos": { "x": 12, "y": 1, "w": 4, "h": 3 },
         "datasource": { "type": "prometheus", "uid": "${datasource}" },
         "targets": [
@@ -193,7 +196,7 @@
         "id": 5,
         "type": "stat",
         "title": "DNS Queries (24h)",
-        "description": "Total DNS queries in the 24-hour rolling window.",
+        "description": "Total queries handled in the rolling 24h window. Informational baseline for normal network chatter. A sudden order-of-magnitude jump can mean a misbehaving device in a DNS loop or malware beaconing — cross-check **Top Clients** to find the source, then inspect that device. A drop to near-zero means clients stopped using this resolver (check **Status**).",
         "gridPos": { "x": 16, "y": 1, "w": 4, "h": 3 },
         "datasource": { "type": "prometheus", "uid": "${datasource}" },
         "targets": [
@@ -224,7 +227,7 @@
         "id": 6,
         "type": "stat",
         "title": "% Blocked",
-        "description": "Percentage of DNS queries blocked by filtering, safe browsing, safe search, or parental controls.",
+        "description": "Share of queries blocked by filtering, safe browsing, safe search or parental controls. Typically 5–25% on a normal network. **Near 0%** suggests filtering isn't working — verify **Protection**/**Filtering** are On and that **Filter Lists** loaded rules. **Unusually high** can mean an overly aggressive blocklist breaking sites — review **Top Blocked Domains** and whitelist false positives. [DNS filtering syntax](https://adguard-dns.io/kb/general/dns-filtering-syntax/)",
         "gridPos": { "x": 20, "y": 1, "w": 4, "h": 3 },
         "datasource": { "type": "prometheus", "uid": "${datasource}" },
         "targets": [
@@ -263,7 +266,7 @@
         "id": 7,
         "type": "timeseries",
         "title": "DNS Queries",
-        "description": "Total DNS queries in the 24-hour rolling window over time.",
+        "description": "Total queries (24h rolling counter) plotted over time, showing the daily rhythm of DNS activity. Use it to spot anomalies: a flat line means queries stopped flowing (clients not using this resolver — check **Status**), a sharp sustained spike means a device is hammering DNS — identify it in **Top Clients** / **Client Queries**.",
         "gridPos": { "x": 0, "y": 5, "w": 8, "h": 8 },
         "datasource": { "type": "prometheus", "uid": "${datasource}" },
         "targets": [
@@ -297,7 +300,7 @@
         "id": 23,
         "type": "timeseries",
         "title": "Blocked & Replaced",
-        "description": "Queries blocked by filtering, safe browsing, safe search, and parental controls in the 24-hour rolling window.",
+        "description": "Blocked/replaced queries split by reason (filtering, safe browsing, safe search, parental) over the 24h window. Filtering is normally the dominant line. If all lines flatten near zero while query volume is high, filtering has effectively stopped — check **Filter Lists** updated successfully and **Protection** is On. A sudden jump in one category points at a new or noisy blocklist; correlate with **Top Blocked Domains**.",
         "gridPos": { "x": 8, "y": 5, "w": 8, "h": 8 },
         "datasource": { "type": "prometheus", "uid": "${datasource}" },
         "targets": [
@@ -346,9 +349,13 @@
         "id": 8,
         "type": "piechart",
         "title": "Block Reasons",
-        "description": "Breakdown of blocked/replaced queries by category.",
+        "description": "Proportion of blocks by category right now. Mostly informational — confirms which protection layer is doing the work (usually filter lists). If a category you expect to be active shows zero slice, that feature may be disabled — check the matching toggle in **Filtering & Configuration**.",
         "gridPos": { "x": 16, "y": 5, "w": 8, "h": 8 },
         "datasource": { "type": "prometheus", "uid": "${datasource}" },
+        "fieldConfig": {
+          "defaults": { "unit": "short" },
+          "overrides": []
+        },
         "targets": [
           {
             "refId": "A",
@@ -392,7 +399,7 @@
         "id": 9,
         "type": "table",
         "title": "Top Queried Domains",
-        "description": "Most frequently queried domains in the 24h rolling window.",
+        "description": "The 10 most-requested domains (24h). Useful for understanding what the network talks to most. Watch for unexpected entries — a no-name domain dominating the list can indicate telemetry, malware C2, or a chatty IoT device; if so, find the talker in **Top Clients** and consider adding a block rule. [Filtering syntax for custom rules](https://adguard-dns.io/kb/general/dns-filtering-syntax/)",
         "gridPos": { "x": 0, "y": 14, "w": 8, "h": 8 },
         "datasource": { "type": "prometheus", "uid": "${datasource}" },
         "targets": [
@@ -431,7 +438,7 @@
         "id": 10,
         "type": "table",
         "title": "Top Blocked Domains",
-        "description": "Most frequently blocked domains in the 24h rolling window.",
+        "description": "The 10 most-blocked domains (24h). Mostly ad/tracker noise — no action needed. Scan it when a site or app misbehaves: if a domain you need is being blocked (false positive), add an exception in AdGuard (Filters → Custom rules: `@@||domain^`). Conversely, a high-volume malware/tracker domain here confirms the blocklists are doing their job. [Custom rule syntax](https://adguard-dns.io/kb/general/dns-filtering-syntax/)",
         "gridPos": { "x": 8, "y": 14, "w": 8, "h": 8 },
         "datasource": { "type": "prometheus", "uid": "${datasource}" },
         "targets": [
@@ -470,7 +477,7 @@
         "id": 11,
         "type": "table",
         "title": "Top Clients",
-        "description": "Most active DNS clients in the 24h rolling window. Name column shows the persistent client name if configured in AdGuard Home.",
+        "description": "The busiest DNS clients (24h); Name shows the persistent client label if configured. This is your first stop when overall query volume looks abnormal — the device topping the list is the one to investigate. An unfamiliar IP generating heavy traffic warrants a look at that host. To label IPs, add a persistent client in AdGuard (Settings → Client settings).",
         "gridPos": { "x": 16, "y": 14, "w": 8, "h": 8 },
         "datasource": { "type": "prometheus", "uid": "${datasource}" },
         "targets": [
@@ -509,7 +516,7 @@
         "id": 24,
         "type": "timeseries",
         "title": "Client Queries",
-        "description": "DNS query count per client over time. Use the $client variable to filter specific clients.",
+        "description": "Per-client query volume over time (filter with the **$client** variable). Use it to confirm or rule out a suspected noisy device and to see when its activity started. A client whose line ramps and stays high may be stuck in a retry/beacon loop — inspect that host or rate-limit it (see the **Ratelimit** panel).",
         "gridPos": { "x": 0, "y": 22, "w": 24, "h": 8 },
         "datasource": { "type": "prometheus", "uid": "${datasource}" },
         "targets": [
@@ -550,7 +557,7 @@
         "id": 12,
         "type": "bargauge",
         "title": "Upstream Responses",
-        "description": "Number of responses per upstream DNS server in the 24h rolling window.",
+        "description": "How many answers came from each configured upstream resolver (24h). Shows load distribution across your upstreams. If one upstream shows zero while others are busy, it may be unreachable — test it and check the AdGuard upstream config (Settings → DNS settings → Upstream DNS servers). Heavy skew to a slow upstream hurts latency; see **Upstream Avg Response Time**.",
         "gridPos": { "x": 0, "y": 31, "w": 12, "h": 6 },
         "datasource": { "type": "prometheus", "uid": "${datasource}" },
         "targets": [
@@ -582,7 +589,7 @@
         "id": 13,
         "type": "bargauge",
         "title": "Upstream Avg Response Time",
-        "description": "Average response time per upstream DNS server (point-in-time snapshot).",
+        "description": "Current mean latency to each upstream resolver. Sub-50ms is good for a nearby/encrypted resolver. An upstream consistently in the hundreds of ms is dragging down browsing — deprioritise or remove it in AdGuard's upstream config, or switch to a faster/closer resolver. Compare with **Upstream Responses** to see if the slow one is also the busiest.",
         "gridPos": { "x": 12, "y": 31, "w": 12, "h": 6 },
         "datasource": { "type": "prometheus", "uid": "${datasource}" },
         "targets": [
@@ -614,7 +621,7 @@
         "id": 25,
         "type": "timeseries",
         "title": "Upstream Response Time",
-        "description": "Average response time per upstream DNS server over time. Shows whether upstream latency is stable or degrading.",
+        "description": "Upstream latency trend over time, per resolver. Flat and low is healthy. A rising or spiky line means an upstream is degrading or your internet link is congested — check the WAN, then consider reordering/removing that upstream in AdGuard (Settings → DNS settings). Brief spikes are usually transient and need no action.",
         "gridPos": { "x": 0, "y": 37, "w": 24, "h": 8 },
         "datasource": { "type": "prometheus", "uid": "${datasource}" },
         "targets": [
@@ -655,7 +662,7 @@
         "id": 14,
         "type": "table",
         "title": "Filter Lists",
-        "description": "Configured filter lists with rule counts and last update time.",
+        "description": "Each configured blocklist with its rule count and last-update time. If a list shows **Enabled = No** unexpectedly, or **Last Updated** is days/weeks stale, filtering coverage is degraded — re-enable it or trigger an update in AdGuard (Filters → DNS blocklists → Check for updates). A list dropping to 0 rules usually means a broken/empty source URL; replace it.",
         "gridPos": { "x": 0, "y": 46, "w": 12, "h": 12 },
         "datasource": { "type": "prometheus", "uid": "${datasource}" },
         "targets": [
@@ -738,7 +745,7 @@
         "id": 15,
         "type": "stat",
         "title": "Filter Rules",
-        "description": "Total number of filter rules across all enabled lists.",
+        "description": "Total active rules across all enabled blocklists. A healthy setup is typically tens of thousands to low millions. A sudden drop means a list failed to load or was disabled — check **Filter Lists** above and re-update. Informational otherwise.",
         "gridPos": { "x": 12, "y": 46, "w": 3, "h": 4 },
         "datasource": { "type": "prometheus", "uid": "${datasource}" },
         "targets": [
@@ -766,7 +773,7 @@
         "id": 16,
         "type": "stat",
         "title": "Lists Enabled",
-        "description": "Number of enabled filter lists out of total configured lists.",
+        "description": "Count of currently enabled blocklists. Informational. If lower than you expect, a list was toggled off or auto-disabled after repeated update failures — review **Filter Lists** and re-enable as needed.",
         "gridPos": { "x": 15, "y": 46, "w": 3, "h": 4 },
         "datasource": { "type": "prometheus", "uid": "${datasource}" },
         "targets": [
@@ -794,7 +801,7 @@
         "id": 17,
         "type": "stat",
         "title": "User Rules",
-        "description": "Number of user-defined filtering rules.",
+        "description": "Count of your hand-written custom rules (allow/block exceptions). Informational. Manage them in AdGuard (Filters → Custom filtering rules); use `@@||domain^` to unblock a false positive or `||domain^` to add a block.",
         "gridPos": { "x": 18, "y": 46, "w": 3, "h": 4 },
         "datasource": { "type": "prometheus", "uid": "${datasource}" },
         "targets": [
@@ -822,7 +829,7 @@
         "id": 18,
         "type": "stat",
         "title": "Update Interval",
-        "description": "How often filter lists are automatically updated.",
+        "description": "How often AdGuard auto-refreshes blocklists, in hours. Informational. 0 means automatic updates are off — set a value (e.g. 24h) in Filters → DNS blocklists so lists don't go stale.",
         "gridPos": { "x": 21, "y": 46, "w": 3, "h": 4 },
         "datasource": { "type": "prometheus", "uid": "${datasource}" },
         "targets": [
@@ -850,7 +857,7 @@
         "id": 26,
         "type": "stat",
         "title": "Filtering",
-        "description": "Whether DNS filtering is enabled globally.",
+        "description": "Global DNS filtering toggle. **Off (red)** means blocklists are not applied even if Protection is on — ads/trackers resolve freely. Re-enable in AdGuard (Settings → DNS settings → Filtering), or via the **Protection** master switch. Green is normal.",
         "gridPos": { "x": 12, "y": 50, "w": 3, "h": 4 },
         "datasource": { "type": "prometheus", "uid": "${datasource}" },
         "targets": [
@@ -862,6 +869,7 @@
         ],
         "fieldConfig": {
           "defaults": {
+            "unit": "short",
             "mappings": [
               {
                 "type": "value",
@@ -885,7 +893,7 @@
         "id": 19,
         "type": "stat",
         "title": "Safe Browsing",
-        "description": "Whether safe browsing protection is enabled.",
+        "description": "AdGuard's malware/phishing domain protection. **Off (red)** is only a concern if you intended it on — toggle in Settings → General settings. Many users leave this off and rely on blocklists instead, so a red state may be intentional.",
         "gridPos": { "x": 15, "y": 50, "w": 3, "h": 4 },
         "datasource": { "type": "prometheus", "uid": "${datasource}" },
         "targets": [
@@ -897,6 +905,7 @@
         ],
         "fieldConfig": {
           "defaults": {
+            "unit": "short",
             "mappings": [
               {
                 "type": "value",
@@ -920,7 +929,7 @@
         "id": 20,
         "type": "stat",
         "title": "Safe Search",
-        "description": "Whether safe search enforcement is enabled.",
+        "description": "Forces search engines into safe-search mode network-wide. **Off (red)** is the default and fine for most setups. Enable in Settings → General settings only if you want to enforce filtered search results (e.g. for a kids' network).",
         "gridPos": { "x": 18, "y": 50, "w": 3, "h": 4 },
         "datasource": { "type": "prometheus", "uid": "${datasource}" },
         "targets": [
@@ -932,6 +941,7 @@
         ],
         "fieldConfig": {
           "defaults": {
+            "unit": "short",
             "mappings": [
               {
                 "type": "value",
@@ -955,7 +965,7 @@
         "id": 21,
         "type": "stat",
         "title": "Parental",
-        "description": "Whether parental control filtering is enabled.",
+        "description": "Parental-control filtering (blocks adult content categories). **Off (red)** is the default. Enable in Settings → General settings if you want category-based content filtering; otherwise red is expected and needs no action.",
         "gridPos": { "x": 21, "y": 50, "w": 3, "h": 4 },
         "datasource": { "type": "prometheus", "uid": "${datasource}" },
         "targets": [
@@ -967,6 +977,7 @@
         ],
         "fieldConfig": {
           "defaults": {
+            "unit": "short",
             "mappings": [
               {
                 "type": "value",
@@ -990,7 +1001,7 @@
         "id": 22,
         "type": "stat",
         "title": "DNSSEC",
-        "description": "Whether DNSSEC validation is enabled.",
+        "description": "Whether AdGuard validates DNSSEC signatures on upstream answers. **Off (red)** means spoofed records for signed zones won't be rejected. Enable in Settings → DNS settings for stronger integrity — but note it requires DNSSEC-capable upstreams and can break resolution for misconfigured domains, so off may be a deliberate choice.",
         "gridPos": { "x": 12, "y": 54, "w": 3, "h": 4 },
         "datasource": { "type": "prometheus", "uid": "${datasource}" },
         "targets": [
@@ -1002,6 +1013,7 @@
         ],
         "fieldConfig": {
           "defaults": {
+            "unit": "short",
             "mappings": [
               {
                 "type": "value",
@@ -1025,7 +1037,7 @@
         "id": 27,
         "type": "stat",
         "title": "DNS Cache",
-        "description": "Whether DNS query caching is enabled.",
+        "description": "Whether AdGuard caches answers. **Off (red)** means every query hits an upstream, raising latency (watch **Avg Processing Time**). Turn it on in Settings → DNS settings and set a sensible **Cache Size** for snappier repeat lookups. Green is normal.",
         "gridPos": { "x": 15, "y": 54, "w": 3, "h": 4 },
         "datasource": { "type": "prometheus", "uid": "${datasource}" },
         "targets": [
@@ -1037,6 +1049,7 @@
         ],
         "fieldConfig": {
           "defaults": {
+            "unit": "short",
             "mappings": [
               {
                 "type": "value",
@@ -1060,7 +1073,7 @@
         "id": 28,
         "type": "stat",
         "title": "Cache Size",
-        "description": "Configured DNS cache size.",
+        "description": "Configured maximum DNS cache size. Informational. 0 with **DNS Cache** on effectively disables caching — set a few MB (Settings → DNS settings → Cache size) to reduce upstream load and improve **Avg Processing Time**.",
         "gridPos": { "x": 18, "y": 54, "w": 3, "h": 4 },
         "datasource": { "type": "prometheus", "uid": "${datasource}" },
         "targets": [
@@ -1088,7 +1101,7 @@
         "id": 29,
         "type": "stat",
         "title": "Ratelimit",
-        "description": "DNS query rate limit (queries per second). 0 means disabled.",
+        "description": "Per-client query rate cap (queries/sec); **0 = unlimited**. Informational. If a single device floods DNS (seen in **Client Queries**), set a limit (e.g. 20) in Settings → DNS settings to protect the resolver — but too low a value drops legitimate bursts, so tune carefully.",
         "gridPos": { "x": 21, "y": 54, "w": 3, "h": 4 },
         "datasource": { "type": "prometheus", "uid": "${datasource}" },
         "targets": [
